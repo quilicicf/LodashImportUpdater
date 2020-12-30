@@ -1,6 +1,6 @@
 const _ = require('lodash');
 
-const findParentOfType = require('./findParentOfType');
+const findParent = require('./findParent');
 const toLodashReplacement = require('./toLodashReplacement');
 
 const processChainedCalls = (j, chainedCalls) => _(chainedCalls)
@@ -33,7 +33,7 @@ module.exports = (j, ast) => {
         const constructorCall = usage.parent; // _(array)
         const array = constructorCall.value.arguments;
 
-        const fullLodashExpression = findParentOfType(usage, 'ExpressionStatement');
+        const fullLodashExpression = findParent(usage, (type) => type === 'ExpressionStatement' || type === 'VariableDeclaration');
         const chainedCalls = _.get(j(fullLodashExpression).find(j.CallExpression), [ '__paths' ]);
 
         const { calls, replacements } = processChainedCalls(j, chainedCalls);
@@ -44,7 +44,13 @@ module.exports = (j, ast) => {
           ),
           array,
         );
-        j(fullLodashExpression).replaceWith(j.expressionStatement(flowCall));
+        if (fullLodashExpression.value.type === 'ExpressionStatement') {
+          fullLodashExpression.value.expression = flowCall;
+        } else if (fullLodashExpression.value.type === 'VariableDeclaration') {
+          fullLodashExpression.value.declarations[ 0 ].init = flowCall;
+        } else {
+          throw Error(`Lodash chained call found in an unsupported statement type: ${fullLodashExpression.value.type}`);
+        }
 
         return { ...seed, ...replacements };
       },
