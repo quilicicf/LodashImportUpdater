@@ -1,12 +1,14 @@
 const _ = require('lodash');
 
 const findParent = require('./findParent');
+const findParents = require('./findParents');
 const toLodashReplacement = require('./toLodashReplacement');
 
 const processChainedCalls = (j, chainedCalls) => _(chainedCalls)
-  .dropRight(1) // Remove constructor call
-  .reverse() // Calls will be in an array in flow => natural order
-  .filter((callExpression) => callExpression.value.callee.property.name !== 'value') // Chain call ending, un-necessary in flow expression
+  .drop(1) // Remove constructor call
+  .filter((callExpression) => (
+    _.get(callExpression, [ 'value', 'callee', 'property', 'name' ]) !== 'value'
+  )) // Chain call ending, un-necessary in flow expression
   .reduce(
     (seed, callExpression) => { // Example: .map(({ age }) => age)
       const lodashMethod = callExpression.value.callee.property; // Identifier, here: map
@@ -33,8 +35,9 @@ module.exports = (j, ast) => {
         const constructorCall = usage.parent; // _(array)
         const array = constructorCall.value.arguments;
 
-        const fullLodashExpression = findParent(usage, (type) => type === 'ExpressionStatement' || type === 'VariableDeclaration');
-        const chainedCalls = _.get(j(fullLodashExpression).find(j.CallExpression), [ '__paths' ]);
+        const fullLodashExpressionPredicate = (type) => type === 'ExpressionStatement' || type === 'VariableDeclarator';
+        const fullLodashExpression = findParent(usage, fullLodashExpressionPredicate);
+        const chainedCalls = findParents(usage, (type) => type === 'CallExpression', fullLodashExpressionPredicate);
 
         const { calls, replacements } = processChainedCalls(j, chainedCalls);
         const flowCall = j.callExpression(
@@ -46,8 +49,8 @@ module.exports = (j, ast) => {
         );
         if (fullLodashExpression.value.type === 'ExpressionStatement') {
           fullLodashExpression.value.expression = flowCall;
-        } else if (fullLodashExpression.value.type === 'VariableDeclaration') {
-          fullLodashExpression.value.declarations[ 0 ].init = flowCall;
+        } else if (fullLodashExpression.value.type === 'VariableDeclarator') {
+          fullLodashExpression.value.init = flowCall;
         } else {
           throw Error(`Lodash chained call found in an unsupported statement type: ${fullLodashExpression.value.type}`);
         }
