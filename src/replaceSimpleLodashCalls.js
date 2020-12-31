@@ -6,6 +6,7 @@ module.exports = (j, ast) => {
   const lodashUsages = _.get(ast.find(j.Identifier, { name: '_' }), [ '__paths' ]);
   return _(lodashUsages)
     .filter((usage) => usage.parent.value.type === 'MemberExpression')
+    .filter((usage) => usage.parent.value.property.name !== 'chain') // Explicit chained call, handled elsewhere
     .reduce(
       (seed, usage) => {
         const member = usage.parent.value; // _.map

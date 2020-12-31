@@ -3,7 +3,8 @@ const setLeadingComment = require('./src/setLeadingComment');
 const removeLodashImports = require('./src/removeLodashImports');
 const addLodashMethodImports = require('./src/addLodashMethodImports');
 const replaceSimpleLodashCalls = require('./src/replaceSimpleLodashCalls');
-const replaceChainedLodashCalls = require('./src/replaceChainedLodashCalls');
+const replaceExplicitChainedLodashCalls = require('./src/replaceExplicitChainedLodashCalls');
+const replaceConstructorChainedLodashCalls = require('./src/replaceConstructorChainedLodashCalls');
 
 module.exports = function replaceLodashMethodPackages (fileInfo, api) {
   const j = api.jscodeshift;
@@ -15,8 +16,13 @@ module.exports = function replaceLodashMethodPackages (fileInfo, api) {
   const leadingComment = getLeadingComment(j, ast);
   removeLodashImports(j, ast);
   const simpleMethods = replaceSimpleLodashCalls(j, ast);
-  const chainedMethods = replaceChainedLodashCalls(j, ast);
-  const replacements = { ...simpleMethods, ...chainedMethods };
+  const constructorChainedMethods = replaceConstructorChainedLodashCalls(j, ast); // _(array)
+  const explicitChainedMethods = replaceExplicitChainedLodashCalls(j, ast); // _.chain(array)
+  const replacements = {
+    ...simpleMethods,
+    ...constructorChainedMethods,
+    ...explicitChainedMethods,
+  };
   addLodashMethodImports(j, ast, replacements);
   setLeadingComment(j, ast, leadingComment);
 
