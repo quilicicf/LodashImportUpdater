@@ -1,10 +1,13 @@
 {
   "name": "lodash-imports-updater",
   "version": "1.0.0",
-  "description": "A script  for JSCodeShift that updates JS files to use lighter lodash imports and reduce the bundle's size",
+  "description": "A script for JSCodeShift that updates JS files to use lighter lodash imports and reduce the bundle's size",
   "main": "index.js",
   "author": "Cyprien Quilici",
   "license": "Apache 2.0",
+  "bin": {
+    "update-lodash-imports": "bin/update-lodash-imports.js"
+  },
   "scripts": {
     "lint": "eslint",
     "write-doc": "node npm-scripts/writeDocumentation.js"
@@ -35,6 +38,8 @@
     "parcel-bundler": "1.12.4"
   },
   "dependencies": {
+    "cli-progress": "3.8.2",
+    "fast-glob": "3.2.4",
     "find-root": "1.1.0",
     "lodash": "4.17.20"
   }
