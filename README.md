@@ -19,6 +19,8 @@ It changes default lodash imports like:
 ```js
 import _ from 'lodash';
 
+_.map(array, mapper);
+
 _(array)
   .filter(predicate)
   .map(transformer)
@@ -32,6 +34,8 @@ import filter from 'lodash/filter';
 import flow from 'lodash/flow';
 import map from 'lodash/map';
 
+map(array, mapper);
+
 flow([
   (_) => filter(_, predicate),
   (_) => map(_, predicate),
@@ -39,6 +43,10 @@ flow([
 ```
 
 This allows tree-shaking to work efficiently and to shave off a good part of lodash from your app bundle, read [this article](https://www.blazemeter.com/blog/the-correct-way-to-import-lodash-libraries-a-benchmark) for more details.
+
+A more complete example of what is supported is available in [the examples](./examples).
+
+> :information_source: If you spot a code pattern where the lodash import is not updated, please either submit a PR or open an issue with a base snippet of code that shows the problematic code pattern.
 
 ## How to use it
 
